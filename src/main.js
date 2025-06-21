@@ -1,4 +1,5 @@
-import './assets/main.css'
+import '@/assets/css/main.css'
+import '@/assets/js/libraries/peerjs.min.js'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
