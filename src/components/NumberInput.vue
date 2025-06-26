@@ -5,7 +5,7 @@
     <input
       v-for="i in 6"
       :key="i"
-      type="text"
+      type="number"
       v-model="numbers[i - 1]"
       @input="emit"
       @keyup="moveCaret($event, i - 1)"
