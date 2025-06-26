@@ -1,6 +1,7 @@
 <script setup>
 import FileInput from '@/components/FileInput.vue';
-import NumberInput from '@/components/NumberInput.vue'
+import NumberInput from '@/components/NumberInput.vue';
+import Spinner from '@/components/Spinner.vue';
 </script>
 
 <template>
@@ -36,6 +37,9 @@ import NumberInput from '@/components/NumberInput.vue'
               {{ peer.originalId }}
             </div>
           </div>
+          <div v-else>
+            <Spinner />
+          </div>
         </div>
       </div>
     </div>
@@ -54,12 +58,19 @@ main {
   padding: 2em;
   align-items: center;
   justify-content: center;
+  gap: 20px;
+}
+
+nav h1 {
+  font-weight: bold;
+  font-size: 32px;
 }
 
 div.content {
   display: flex;
   width: 100%;
   height: 100%;
+  max-width: 1080px;
 }
 
 div.content-container {
@@ -70,7 +81,6 @@ div.content-container {
 div.content-container > div {
   flex: 1;
   position: relative;
-  display: inline-block;
   margin: 10px;
   padding: 20px;
   border-radius: 10px;
@@ -79,6 +89,7 @@ div.content-container > div {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .file-prepared {
@@ -100,6 +111,12 @@ div.content-container > div {
   font-size: 32px;
   font-weight: bold;
   letter-spacing: 10px;
+}
+
+@media only screen and (max-width: 720px) {
+  div.content-container {
+    flex-direction: column;
+  }
 }
 
 
