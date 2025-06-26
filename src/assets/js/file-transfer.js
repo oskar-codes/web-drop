@@ -11,7 +11,7 @@ export function createPeer() {
 export const peerInstance = createPeer();
 
 export function sendFile(otherId, file) {
-  const connection = peerInstance.connect(connectionPrefix + otherId.toString());
+  const connection = peerInstance.connect(connectionPrefix + otherId);
   connection.on('open', () => {
     connection.send({
       name: file.name,

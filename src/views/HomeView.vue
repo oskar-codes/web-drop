@@ -5,7 +5,7 @@ import Spinner from '@/components/Spinner.vue';
 </script>
 
 <template>
-  <main>
+  <main @drop="dropHandler" @dragover="dragOverHandler">
     
     <nav>
       <h1>WebDrop</h1>
@@ -15,19 +15,23 @@ import Spinner from '@/components/Spinner.vue';
       <div class="content-container">
         <div class="send">
           <h1>Send</h1>
-          <div v-if="!file">
-            <FileInput @file="uploadFile" />
-          </div>
-          <div class="file-prepared" v-else>
-            <div class="selected-file">
-              <p>{{ file.name }}</p>
-              <p>{{ fileSize }}</p>
-  
+          <Transition name="fade" mode="out-in">
+            <div v-if="!file">
+              <FileInput @file="uploadFile" />
             </div>
-            <NumberInput v-model="otherId" />
-
-            <button @click="send">Send</button>
-          </div>
+            <div class="file-prepared" v-else>
+              <div class="selected-file">
+                <p>{{ file.name }}</p>
+                <p>{{ fileSize }}</p>
+              </div>
+              <NumberInput v-model="otherId" />
+  
+              <div class="buttons">
+                <button @click="back">Back</button>
+                <button @click="send">Send</button>
+              </div>
+            </div>
+          </Transition>
         </div>
         <div class="receive">
           <h1>Receive</h1>
@@ -70,7 +74,7 @@ div.content {
   display: flex;
   width: 100%;
   height: 100%;
-  max-width: 1080px;
+  max-width: 900px;
 }
 
 div.content-container {
@@ -90,12 +94,26 @@ div.content-container > div {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  gap: 10px;
+}
+
+div.send .buttons {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  gap: 10px;
+}
+
+div.send .buttons button {
+  width: 100px;
 }
 
 .file-prepared {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-width: 100%;
 }
 
 .selected-file {
@@ -105,6 +123,13 @@ div.content-container > div {
   padding: 0.5em 1em;
   gap: 20px;
   justify-content: space-between;
+}
+
+.selected-file > p:first-child {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .peer-id {
@@ -117,9 +142,20 @@ div.content-container > div {
   div.content-container {
     flex-direction: column;
   }
+  div.content {
+    flex-direction: column;
+  }
+  .selected-file {
+    flex-direction: column;
+    gap: 0px;
+  }
+  .selected-file > p:first-child {
+    max-width: 100%;
+  }
+  main {
+    padding: 5px;
+  }
 }
-
-
 </style>
 
 
@@ -134,7 +170,7 @@ export default {
     const { peer, receivedFile } = storeToRefs(peerStore);
     return {
       file: null,
-      otherId: 0,
+      otherId: "",
       peer,
       receivedFile,
     }
@@ -145,6 +181,25 @@ export default {
     },
     send() {
       sendFile(this.otherId, this.file);
+    },
+    back() {
+      this.file = null
+    },
+    dropHandler(e) {
+      e.preventDefault();
+
+      if (e.dataTransfer.items) {
+        if (e.dataTransfer.items[0]?.kind === "file") {
+          this.file = e.dataTransfer.items[0].getAsFile();
+        }
+      } else {
+        if (e.dataTransfer.files[0]) {
+          this.file = e.dataTransfer.files[0];
+        }
+      }
+    },
+    dragOverHandler(e) {
+      e.preventDefault();
     }
   },
   computed: {
