@@ -10,9 +10,12 @@
       @input="emit"
       @keyup="moveCaret($event, i - 1)"
       @keydown="backspace($event, i - 1)"
+      @keypress="prevent"
       maxlength="1"
-      pattern="[0-9]"
-      >
+      pattern="\d"
+      min="0"
+      max="9"
+    >
   </div>
 </template>
 
@@ -38,6 +41,19 @@ div > input[type='number'] {
 
 div > input[type='number']:focus {
   border: 2px solid var(--blue);
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0; 
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 @media only screen and (max-width: 720px) {
@@ -82,6 +98,11 @@ export default {
         if (e.target.value === "") {
           this.$refs.input.children[i - 1].focus();
         }
+      }
+    },
+    prevent(e) {
+      if (e.which < 48 || e.which > 57) {
+        e.preventDefault();
       }
     }
   }
