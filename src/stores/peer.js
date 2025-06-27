@@ -22,8 +22,11 @@ export const usePeer = defineStore('peer', () => {
     console.error(e);
   });
 
+  const register = (name, callback) => peerInstance.on(name, callback);
+
   return {
     peer,
-    receivedFile
+    receivedFile,
+    register
   }
 })

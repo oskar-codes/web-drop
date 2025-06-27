@@ -2,12 +2,16 @@
 import FileInput from '@/components/FileInput.vue';
 import NumberInput from '@/components/NumberInput.vue';
 import Spinner from '@/components/Spinner.vue';
+import Favicon from '../../public/favicon.webp';
+import { Toaster, toast } from "@steveyuowo/vue-hot-toast";
+import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
 </script>
 
 <template>
   <main @drop="dropHandler" @dragover="dragOverHandler">
     
     <nav>
+      <img :src="Favicon">
       <h1>WebDrop</h1>
     </nav>
 
@@ -49,6 +53,8 @@ import Spinner from '@/components/Spinner.vue';
     </div>
 
   </main>
+
+  <Toaster />
 </template>
 
 
@@ -65,9 +71,20 @@ main {
   gap: 20px;
 }
 
+nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
 nav h1 {
   font-weight: bold;
   font-size: 32px;
+}
+
+nav img {
+  width: 50px;
+  height: 50px;
 }
 
 div.content {
@@ -161,18 +178,27 @@ div.send .buttons button {
 
 <script>
 import { usePeer } from '@/stores/peer.js';
-import { storeToRefs } from 'pinia';
-import { sendFile } from '@/assets/js/file-transfer.js';
+import { storeToRefs, mapActions } from 'pinia';
+import { formatError, sendFile } from '@/assets/js/file-transfer.js';
 
 export default {
   data() {
     const peerStore = usePeer();
     const { peer, receivedFile } = storeToRefs(peerStore);
+
+    this.register('error', e => {
+      this.sending = false;
+      toast.error(formatError(e.type), { position: 'bottom-center' });
+      this.removeLoadingToast();
+    });
+
     return {
       file: null,
       otherId: "",
       peer,
       receivedFile,
+      loadingToast: "",
+      sending: false
     }
   },
   methods: {
@@ -180,7 +206,25 @@ export default {
       this.file = file;
     },
     send() {
-      sendFile(this.otherId, this.file);
+      if (!/^[0-9]{6}$/.test(this.otherId)) {
+        toast.error('Invalid ID.', { position: 'bottom-center' });
+        return;
+      }
+
+      if (!this.sending) {
+        this.sending = true;
+        this.loadingToast = toast.loading('Sending file...', { position: 'bottom-center' });
+
+        sendFile(this.otherId, this.file, () => {
+          toast.success('File sent', { position: 'bottom-center' });
+          this.removeLoadingToast();
+          this.sending = false;
+        }, e => {
+          toast.error(formatError(e.type), { position: 'bottom-center' });
+          this.removeLoadingToast();
+          this.sending = false;
+        });
+      }
     },
     back() {
       this.file = null
@@ -200,7 +244,15 @@ export default {
     },
     dragOverHandler(e) {
       e.preventDefault();
-    }
+    },
+    removeLoadingToast() {
+      if (this.loadingToast === "") return;
+      toast.update(this.loadingToast, {
+        duration: 0
+      });
+      this.loadingToast = "";
+    },
+    ...mapActions(usePeer, ['register']),
   },
   computed: {
     fileSize() {
@@ -210,6 +262,8 @@ export default {
   },
   watch: {
     receivedFile(file) {
+      const formattedName = file.name.length < 20 ? file.name : file.name.slice(0, 17) + '...';
+      toast.success(`Received file: ${formattedName}`, { position: 'bottom-center' });
       const a = document.createElement('a');
       const url = URL.createObjectURL(file);
       a.href = url;
