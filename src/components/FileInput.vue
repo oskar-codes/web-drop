@@ -23,7 +23,7 @@
   cursor: pointer;
   padding: 1em 2em;
   border-radius: 20px;
-  border: 3px dashed var(--green);
+  border: 3px dashed var(--blue);
 }
 
 .drop-zone img {

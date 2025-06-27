@@ -24,7 +24,7 @@ div {
   width: 100%;
 }
 
-div > input[type='text'] {
+div > input[type='number'] {
   width: 50px;
   height: 70px;
   border: 2px solid rgb(160, 160, 160);
@@ -36,12 +36,12 @@ div > input[type='text'] {
   text-align: center;
 }
 
-div > input[type='text']:focus {
-  border: 2px solid rgb(64, 64, 64);
+div > input[type='number']:focus {
+  border: 2px solid var(--blue);
 }
 
 @media only screen and (max-width: 720px) {
-  div > input[type='text'] {
+  div > input[type='number'] {
     max-width: 15%;
     width: inherit;
     height: initial;

@@ -117,7 +117,7 @@ div.send .buttons button {
 }
 
 .selected-file {
-  border: 3px solid var(--green);
+  border: 3px solid var(--blue);
   border-radius: 20px;
   display: flex;
   padding: 0.5em 1em;

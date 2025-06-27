@@ -4,7 +4,7 @@
 
 <style scoped>
 .spinner {
-  --color: black;
+  --color: var(--blue);
 	height: 32px;
 	width: 32px;
   margin: 20px;

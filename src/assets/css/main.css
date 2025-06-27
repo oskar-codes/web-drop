@@ -3,7 +3,7 @@
 button {
   background-color: white;
   color: black;
-  border: 3px solid var(--green);
+  border: 3px solid var(--blue);
   border-radius: 20px;
   padding: 10px 20px;
   cursor: pointer;
@@ -11,7 +11,7 @@ button {
 }
 
 button:hover {
-  background-color: var(--green);
+  background-color: var(--blue);
   color: white;
 }
 
