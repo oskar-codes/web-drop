@@ -1,29 +1,21 @@
-# web-drop
+# WebDrop
 
-This template should help get you started developing with Vue 3 in Vite.
+[WebDrop](https://oskar-codes.github.io/web-drop) is a peer-to-peer file sharing tool. It is powered by WebRTC, allowing for serverless communication between devices.
 
-## Recommended IDE Setup
+## Features to add
+- [ ] Handling and transferring multiple files at once
+- [ ] Locally storing devices that the user recently communicated with, to avoid having to re-input IDs.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## Project setup and development
 
 ```sh
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+### Building and deploying
 
 ```sh
 npm run build
+npm run deploy
 ```
