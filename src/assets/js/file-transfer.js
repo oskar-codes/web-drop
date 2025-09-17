@@ -10,13 +10,16 @@ export function createPeer() {
 
 export const peerInstance = createPeer();
 
-export function sendFile(otherId, file, success, error) {
+export function sendFiles(otherId, files, success, error) {
   const connection = peerInstance.connect(connectionPrefix + otherId);
   connection.on('open', () => {
+    const filesArray = Array.from(files).map(f => ({
+      file: f,
+      name: f.name
+    }));
     connection.send({
       type: 'file',
-      name: file.name,
-      file
+      files: filesArray
     });
   });
   if (success) connection.on('close', success)

@@ -9,7 +9,7 @@
       <p>Select or drop files</p>
     </div>
 
-    <input type="file" ref="input" @change="uploadFile">
+    <input type="file" ref="input" multiple @change="uploadFile">
   </div>
 </template>
 
@@ -40,7 +40,7 @@ export default {
   emits: ['file'],
   data() {
     return {
-      file: null
+      file: []
     } 
   },
   methods: {
@@ -48,11 +48,11 @@ export default {
       this.$refs.input.click();
     },
     uploadFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-      this.$emit('file', file);
-      this.file = file;
+      this.$emit('file', files);
+      this.files = files;
     }
   }
 }

@@ -28,15 +28,15 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
 
             <div v-if="mode === 'file'">
               <Transition name="fade" mode="out-in">
-                <div v-if="!file">
-                  <FileInput @file="uploadFile" />
+                <div v-if="files.length === 0">
+                  <FileInput @file="uploadFiles" />
                   <hr />
                   <a @click="mode = 'text'">Or send text</a>
                 </div>
                 <div v-else class="input-column">
-                  <div class="selected-payload">
+                  <div class="selected-payload" v-for="file in files" :key="file.name">
                     <p>{{ file.name }}</p>
-                    <p>{{ fileSize }}</p>
+                    <p>{{ fileSize(file) }}</p>
                   </div>
                   <NumberInput v-model="otherId" />
       
@@ -279,12 +279,12 @@ div.send .buttons button {
 <script>
 import { usePeer } from '@/stores/peer.js';
 import { storeToRefs, mapActions } from 'pinia';
-import { formatError, sendFile, sendText } from '@/assets/js/file-transfer.js';
+import { formatError, sendFiles, sendText } from '@/assets/js/file-transfer.js';
 
 export default {
   data() {
     const peerStore = usePeer();
-    const { peer, receivedFile, receivedText } = storeToRefs(peerStore);
+    const { peer, receivedFiles, receivedText } = storeToRefs(peerStore);
 
     this.register('error', e => {
       this.sending = false;
@@ -294,21 +294,24 @@ export default {
 
     return {
       mode: 'file',
-      file: null,
+      files: [],
       text: '',
       sendingText: false,
       showTextModal: false,
       otherId: '',
       peer,
-      receivedFile,
+      receivedFiles,
       receivedText,
       loadingToast: '',
       sending: false
     }
   },
   methods: {
-    uploadFile(file) {
-      this.file = file;
+    uploadFiles(files) {
+      this.files = files;
+    },
+    fileSize(file) {
+      return (file.size / 1024).toFixed(1) + 'KB';
     },
     send() {
       if (!/^[0-9]{6}$/.test(this.otherId)) {
@@ -327,8 +330,8 @@ export default {
 
         if (this.mode === 'file') {
 
-          sendFile(this.otherId, this.file, () => {
-            toast.success('File sent!', { position: 'bottom-center' });
+          sendFiles(this.otherId, this.files, () => {
+            toast.success('Files sent!', { position: 'bottom-center' });
             this.removeLoadingToast();
             this.sending = false;
           }, e => {
@@ -355,18 +358,18 @@ export default {
     },
     back() {
       this.sendingText = false;
-      this.file = null;
+      this.files = [];
     },
     dropHandler(e) {
       e.preventDefault();
 
       if (e.dataTransfer.items) {
         if (e.dataTransfer.items[0]?.kind === "file") {
-          this.file = e.dataTransfer.items[0].getAsFile();
+          this.files = Array.from(e.dataTransfer.items).map(e => e.getAsFile());
         }
       } else {
         if (e.dataTransfer.files[0]) {
-          this.file = e.dataTransfer.files[0];
+          this.files = e.dataTransfer.files;
         }
       }
     },
@@ -390,21 +393,17 @@ export default {
     },
     ...mapActions(usePeer, ['register']),
   },
-  computed: {
-    fileSize() {
-      if (!this.file) return '';
-      return (this.file.size / 1024).toFixed(1) + 'KB';
-    }
-  },
   watch: {
-    receivedFile(file) {
-      const formattedName = file.name.length < 20 ? file.name : file.name.slice(0, 17) + '...';
-      toast.success(`Received file: ${formattedName}`, { position: 'bottom-center' });
-      const a = document.createElement('a');
-      const url = URL.createObjectURL(file);
-      a.href = url;
-      a.download = file.name;
-      a.click();
+    receivedFiles(files) {
+      for (const file of files) {
+        const formattedName = file.name.length < 20 ? file.name : file.name.slice(0, 17) + '...';
+        toast.success(`Received file: ${formattedName}`, { position: 'bottom-center' });
+        const a = document.createElement('a');
+        const url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = file.name;
+        a.click();
+      }
     },
     receivedText(text) {
       const URL_REGEX = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
