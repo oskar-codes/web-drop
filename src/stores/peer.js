@@ -5,6 +5,7 @@ import { peerInstance } from '@/assets/js/file-transfer'
 export const usePeer = defineStore('peer', () => {
   const peer = new ref(null);
   const receivedFile = new ref(null);
+  const receivedText = new ref('');
 
   peerInstance.on('open', () => {
     peer.value = peerInstance;
@@ -12,9 +13,16 @@ export const usePeer = defineStore('peer', () => {
 
   peerInstance.on('connection', connection => {
     connection.on('data', data => {
-      const file = new File([data.file], data.name);
-      receivedFile.value = file;
-      connection.close();
+
+      if (data.type === 'file') {
+        const file = new File([data.file], data.name);
+        receivedFile.value = file;
+        connection.close();
+      } else if (data.type === 'text') {
+        receivedText.value = data.text;
+        connection.close();
+      }
+
     });
   });
 
@@ -27,6 +35,7 @@ export const usePeer = defineStore('peer', () => {
   return {
     peer,
     receivedFile,
+    receivedText,
     register
   }
 })
