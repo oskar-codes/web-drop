@@ -4,6 +4,8 @@
 
 ## Features to add
 - [ ] Handling and transferring multiple files at once
+- [x] Sending text/URLs
+- [ ] Create URL system with files encoded in base64 data URLs
 - [ ] Locally storing devices that the user recently communicated with, to avoid having to re-input IDs.
 
 ## Project setup and development
