@@ -34,7 +34,7 @@
   left: 50%; top: 50%;
   transform: translate(-50%, -50%);
   min-width: 80%;
-  max-width: 800px;
+  max-width: 100%;
   max-height: 100%;
   background-color: white;
   overflow-y: scroll;
