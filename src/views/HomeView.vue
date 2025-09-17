@@ -2,8 +2,8 @@
 import FileInput from '@/components/FileInput.vue';
 import NumberInput from '@/components/NumberInput.vue';
 import Spinner from '@/components/Spinner.vue';
-import Favicon from '../../public/favicon.webp';
-import Copy from '../../public/images/copy.svg';
+import Favicon from '/favicon.webp';
+import Copy from '/images/copy.svg';
 import Modal from '@/components/Modal.vue';
 import { Toaster, toast } from "@steveyuowo/vue-hot-toast";
 import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
@@ -19,9 +19,13 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
 
     <div class="content">
       <div class="content-container">
+
+
         <div class="send">
           <h1>Send</h1>
           <Transition name="fade" mode="out-in">
+
+
             <div v-if="mode === 'file'">
               <Transition name="fade" mode="out-in">
                 <div v-if="!file">
@@ -43,12 +47,14 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
                 </div>
               </Transition>
             </div>
+
+
             <div v-else-if="mode === 'text'">
               <Transition name="fade" mode="out-in">
                 <div v-if="!sendingText">
                   <div class="input-column">
-                    <textarea v-model="text" type="text" placeholder="Enter text to send" />
-                    <button @click="sendingText = true">Continue</button>
+                    <textarea v-model="text" type="text" placeholder="Enter the text to send" />
+                    <button @click="validateText">Continue</button>
                   </div>
 
                   <hr />
@@ -65,11 +71,14 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
                     <button @click="back">Back</button>
                   </div>
                 </div>
-
               </Transition>
             </div>
+
+
           </Transition>
         </div>
+
+
         <div class="receive">
           <h1>Receive</h1>
           <div v-if="peer">
@@ -82,17 +91,22 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
             <Spinner />
           </div>
         </div>
+
+
       </div>
     </div>
 
     <Modal v-model="showTextModal">
-      <div class="modal-header">
-        <h1>Received text</h1>
-        <a class="copy" @click="copy">
-          <img :src="Copy" />
-        </a>
+      <div class="received-text-modal">
+        <div class="modal-header">
+          <h1>Received text</h1>
+          <a class="copy" @click="copy">
+            <img :src="Copy" />
+          </a>
+        </div>
+        <p class="received-text">{{ receivedText }}</p>
+        <button @click="showTextModal = false;">Close</button>
       </div>
-      <p class="received-text">{{ receivedText }}</p>
     </Modal>
 
   </main>
@@ -142,7 +156,7 @@ div.content-container {
   flex: 1;
 }
 
-div.content-container > div {
+div.send, div.receive {
   flex: 1;
   position: relative;
   margin: 10px;
@@ -156,6 +170,13 @@ div.content-container > div {
   justify-content: center;
   overflow: hidden;
   gap: 10px;
+}
+
+div.title-top div.send > div, div.title-top div.receive > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: center;
 }
 
 div.send .buttons {
@@ -204,6 +225,16 @@ div.send .buttons button {
   background-color: var(--vt-c-divider-light-2);
   padding: 20px;
   border-radius: 10px;
+}
+
+.received-text-modal {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.received-text-modal > button {
+  align-self: center;
 }
 
 .modal-header {
@@ -348,6 +379,10 @@ export default {
         duration: 0
       });
       this.loadingToast = "";
+    },
+    validateText() {
+      if (this.text.trim() === '') return;
+      this.sendingText = true;
     },
     copy() {
       navigator.clipboard.writeText(this.receivedText);
