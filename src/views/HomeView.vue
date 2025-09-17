@@ -3,6 +3,8 @@ import FileInput from '@/components/FileInput.vue';
 import NumberInput from '@/components/NumberInput.vue';
 import Spinner from '@/components/Spinner.vue';
 import Favicon from '../../public/favicon.webp';
+import Copy from '../../public/images/copy.svg';
+import Modal from '@/components/Modal.vue';
 import { Toaster, toast } from "@steveyuowo/vue-hot-toast";
 import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
 </script>
@@ -20,20 +22,51 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
         <div class="send">
           <h1>Send</h1>
           <Transition name="fade" mode="out-in">
-            <div v-if="!file">
-              <FileInput @file="uploadFile" />
+            <div v-if="mode === 'file'">
+              <Transition name="fade" mode="out-in">
+                <div v-if="!file">
+                  <FileInput @file="uploadFile" />
+                  <hr />
+                  <a @click="mode = 'text'">Or send text</a>
+                </div>
+                <div v-else class="input-column">
+                  <div class="selected-payload">
+                    <p>{{ file.name }}</p>
+                    <p>{{ fileSize }}</p>
+                  </div>
+                  <NumberInput v-model="otherId" />
+      
+                  <div class="buttons">
+                    <button @click="back">Back</button>
+                    <button @click="send">Send</button>
+                  </div>
+                </div>
+              </Transition>
             </div>
-            <div class="file-prepared" v-else>
-              <div class="selected-file">
-                <p>{{ file.name }}</p>
-                <p>{{ fileSize }}</p>
-              </div>
-              <NumberInput v-model="otherId" />
-  
-              <div class="buttons">
-                <button @click="back">Back</button>
-                <button @click="send">Send</button>
-              </div>
+            <div v-else-if="mode === 'text'">
+              <Transition name="fade" mode="out-in">
+                <div v-if="!sendingText">
+                  <div class="input-column">
+                    <textarea v-model="text" type="text" placeholder="Enter text to send" />
+                    <button @click="sendingText = true">Continue</button>
+                  </div>
+
+                  <hr />
+                  <a @click="mode = 'file'">Or send files</a>
+                </div>
+                <div v-else class="input-column">
+                  <div class="selected-payload">
+                    <p>{{ text }}</p>
+                  </div>
+
+                  <NumberInput v-model="otherId" />
+                  <div class="buttons">
+                    <button @click="send">Send</button>
+                    <button @click="back">Back</button>
+                  </div>
+                </div>
+
+              </Transition>
             </div>
           </Transition>
         </div>
@@ -51,6 +84,16 @@ import "@steveyuowo/vue-hot-toast/vue-hot-toast.css";
         </div>
       </div>
     </div>
+
+    <Modal v-model="showTextModal">
+      <div class="modal-header">
+        <h1>Received text</h1>
+        <a class="copy" @click="copy">
+          <img :src="Copy" />
+        </a>
+      </div>
+      <p class="received-text">{{ receivedText }}</p>
+    </Modal>
 
   </main>
 
@@ -126,14 +169,14 @@ div.send .buttons button {
   width: 100px;
 }
 
-.file-prepared {
+.input-column {
   display: flex;
   flex-direction: column;
   gap: 10px;
   max-width: 100%;
 }
 
-.selected-file {
+.selected-payload {
   border: 3px solid var(--blue);
   border-radius: 20px;
   display: flex;
@@ -142,7 +185,7 @@ div.send .buttons button {
   justify-content: space-between;
 }
 
-.selected-file > p:first-child {
+.selected-payload > p:first-child {
   max-width: 300px;
   white-space: nowrap;
   overflow: hidden;
@@ -155,6 +198,32 @@ div.send .buttons button {
   letter-spacing: 10px;
 }
 
+.received-text {
+  white-space: pre;
+  overflow-x: scroll;
+  background-color: var(--vt-c-divider-light-2);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header .copy {
+  border-radius: 50%;
+  background-color: var(--blue);
+  padding: 10px;
+  line-height: 0;
+}
+
+.modal-header .copy img {
+  width: 20px;
+  height: 20px;
+}
+
 @media only screen and (max-width: 720px) {
   div.content-container {
     flex-direction: column;
@@ -162,11 +231,11 @@ div.send .buttons button {
   div.content {
     flex-direction: column;
   }
-  .selected-file {
+  .selected-payload {
     flex-direction: column;
     gap: 0px;
   }
-  .selected-file > p:first-child {
+  .selected-payload > p:first-child {
     max-width: 100%;
   }
   main {
@@ -179,12 +248,12 @@ div.send .buttons button {
 <script>
 import { usePeer } from '@/stores/peer.js';
 import { storeToRefs, mapActions } from 'pinia';
-import { formatError, sendFile } from '@/assets/js/file-transfer.js';
+import { formatError, sendFile, sendText } from '@/assets/js/file-transfer.js';
 
 export default {
   data() {
     const peerStore = usePeer();
-    const { peer, receivedFile } = storeToRefs(peerStore);
+    const { peer, receivedFile, receivedText } = storeToRefs(peerStore);
 
     this.register('error', e => {
       this.sending = false;
@@ -193,11 +262,16 @@ export default {
     });
 
     return {
+      mode: 'file',
       file: null,
-      otherId: "",
+      text: '',
+      sendingText: false,
+      showTextModal: false,
+      otherId: '',
       peer,
       receivedFile,
-      loadingToast: "",
+      receivedText,
+      loadingToast: '',
       sending: false
     }
   },
@@ -210,24 +284,47 @@ export default {
         toast.error('Invalid ID.', { position: 'bottom-center' });
         return;
       }
+      if (this.peer.originalId === this.otherId) {
+        toast.error('Try sending the data to someone else.', { position: 'bottom-center' });
+        return;
+      }
+      if (this.mode === 'text' && this.text.trim() === '') return;
 
       if (!this.sending) {
         this.sending = true;
-        this.loadingToast = toast.loading('Sending file...', { position: 'bottom-center' });
+        this.loadingToast = toast.loading(`Sending ${this.mode}...`, { position: 'bottom-center' });
 
-        sendFile(this.otherId, this.file, () => {
-          toast.success('File sent', { position: 'bottom-center' });
-          this.removeLoadingToast();
-          this.sending = false;
-        }, e => {
-          toast.error(formatError(e.type), { position: 'bottom-center' });
-          this.removeLoadingToast();
-          this.sending = false;
-        });
+        if (this.mode === 'file') {
+
+          sendFile(this.otherId, this.file, () => {
+            toast.success('File sent!', { position: 'bottom-center' });
+            this.removeLoadingToast();
+            this.sending = false;
+          }, e => {
+            toast.error(formatError(e.type), { position: 'bottom-center' });
+            this.removeLoadingToast();
+            this.sending = false;
+          });
+
+        } else if (this.mode === 'text') {
+
+          sendText(this.otherId, this.text.trim(), () => {
+            toast.success('Text sent!', { position: 'bottom-center' });
+            this.removeLoadingToast();
+            this.sending = false;
+          }, e => {
+            toast.error(formatError(e.type), { position: 'bottom-center' });
+            this.removeLoadingToast();
+            this.sending = false;
+          });
+
+        }
+
       }
     },
     back() {
-      this.file = null
+      this.sendingText = false;
+      this.file = null;
     },
     dropHandler(e) {
       e.preventDefault();
@@ -252,6 +349,10 @@ export default {
       });
       this.loadingToast = "";
     },
+    copy() {
+      navigator.clipboard.writeText(this.receivedText);
+      toast.success('Text copied to clipboard!', { position: 'bottom-center' })
+    },
     ...mapActions(usePeer, ['register']),
   },
   computed: {
@@ -269,6 +370,20 @@ export default {
       a.href = url;
       a.download = file.name;
       a.click();
+    },
+    receivedText(text) {
+      const URL_REGEX = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
+      if (URL_REGEX.test(text)) {
+        
+        const a = document.createElement('a');
+        a.href = text;
+        a.click();
+
+        return;
+      }
+
+      this.showTextModal = true;
+
     }
   }
 }
