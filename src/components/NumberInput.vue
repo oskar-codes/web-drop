@@ -74,7 +74,7 @@ export default {
   emits: ['update:modelValue'],
   data() {
     return {
-      numbers: []
+      numbers: this.modelValue.split('').map(v => parseInt(v))
     }
   },
   computed: {
